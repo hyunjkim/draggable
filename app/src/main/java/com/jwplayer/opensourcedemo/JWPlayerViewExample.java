@@ -2,6 +2,7 @@ package com.jwplayer.opensourcedemo;
 
 import android.content.Intent;
 import android.content.res.Configuration;
+import android.content.res.Resources;
 import android.os.Bundle;
 import android.support.design.widget.CoordinatorLayout;
 import android.support.v7.app.ActionBar;
@@ -17,6 +18,7 @@ import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.github.pedrovgs.DraggablePanel;
 import com.longtailvideo.jwplayer.JWPlayerView;
 import com.longtailvideo.jwplayer.cast.CastManager;
 import com.longtailvideo.jwplayer.configuration.PlayerConfig;
@@ -55,7 +57,7 @@ public class JWPlayerViewExample extends AppCompatActivity implements VideoPlaye
 	 */
 	private CoordinatorLayout mCoordinatorLayout;
 
-	private FrameLayout mDraggable;
+	private DraggablePanel mDraggable;
 
     @Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -63,36 +65,69 @@ public class JWPlayerViewExample extends AppCompatActivity implements VideoPlaye
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_jwplayerview);
 
+        TextView outputTextView = (TextView) findViewById(R.id.output);
         ScrollView sv = (ScrollView) findViewById(R.id.scroll);
-		sv.setOverScrollMode(0);
+        sv.setOverScrollMode(0);
 
-        TextView outputTextView = (TextView)findViewById(R.id.output);
+        mDraggable = (DraggablePanel) findViewById(R.id.draggable_view);
+        mPlayerView = (JWPlayerView) findViewById(R.id.jwplayer);
+        mCoordinatorLayout = (CoordinatorLayout) findViewById(R.id.activity_jwplayerview);
 
-        mDraggable = (FrameLayout) findViewById(R.id.draggable);
-		mPlayerView = (JWPlayerView)findViewById(R.id.jwplayer);
-		if(mDraggable.getChildCount()> 0){
-            mDraggable.removeAllViews();
-        }
+        //set some feature for draggable panel
+        mDraggable.setVisibility(View.GONE);
+        mDraggable.setClickToMaximizeEnabled(true);
+        mDraggable.setClickToMinimizeEnabled(true);
+        mDraggable.initializeView();
 
-        int h = mPlayerView.getHeight();
-		int w = mPlayerView.getWidth();
-
-		mDraggable.addView(mPlayerView);
-        mDraggable.setOnTouchListener(this);
+        mPlayerView.setOnTouchListener(this);
 
         VMAPConfig();
 
-        mEventHandler = new JWEventHandler(mPlayerView, outputTextView,sv);
+        mEventHandler = new JWEventHandler(mPlayerView, outputTextView, sv);
 
-		mCoordinatorLayout = (CoordinatorLayout)findViewById(R.id.activity_jwplayerview);
+        // Keep the screen on during playback
+        new KeepScreenOnHandler(mPlayerView, getWindow());
 
-		// Keep the screen on during playback
-		new KeepScreenOnHandler(mPlayerView, getWindow());
+        // Get a reference to the CastManager
+        mCastManager = CastManager.getInstance();
 
-		// Get a reference to the CastManager
-		mCastManager = CastManager.getInstance();
+    }
 
-	}
+    private float dX;
+    private float dY;
+    private int lastAction;
+
+    @Override
+    public boolean onTouch(View view, MotionEvent event) {
+        print("onTouch!! ");
+        switch (event.getActionMasked()) {
+            case MotionEvent.ACTION_DOWN:
+                view.performClick();
+                dX = view.getX() - event.getRawX();
+                dY = view.getY() - event.getRawY();
+                lastAction = MotionEvent.ACTION_DOWN;
+                mDraggable.setVisibility(View.VISIBLE);
+//                mDraggable.minimize();
+                break;
+
+            case MotionEvent.ACTION_MOVE:
+                view.setY(event.getRawY() + dY);
+                view.setX(event.getRawX() + dX);
+                lastAction = MotionEvent.ACTION_MOVE;
+                mDraggable.setVisibility(View.VISIBLE);
+                break;
+
+            case MotionEvent.ACTION_UP:
+                if (lastAction == MotionEvent.ACTION_DOWN)
+                    Toast.makeText(this, "Clicked!", Toast.LENGTH_SHORT).show();
+                break;
+
+            default:
+                return false;
+        }
+        return true;
+    }
+
     String videoURL = "http://content.jwplatform.com/videos/kaUXWqTZ-640.mp4";
 
     private void VMAPConfig(){
@@ -157,7 +192,6 @@ public class JWPlayerViewExample extends AppCompatActivity implements VideoPlaye
     @Override
 	protected void onDestroy() {
 		// Let JW Player know that the app is being destroyed
-        mDraggable.removeView(mPlayerView);
         mPlayerView.onDestroy();
         print("Destroy");
         super.onDestroy();
@@ -215,35 +249,4 @@ public class JWPlayerViewExample extends AppCompatActivity implements VideoPlaye
 		}
 	}
 
-    private float dX;
-    private float dY;
-    private int lastAction;
-
-    @Override
-    public boolean onTouch(View view, MotionEvent event) {
-        print("onTouch!! ");
-        switch (event.getActionMasked()) {
-            case MotionEvent.ACTION_DOWN:
-                view.performClick();
-                dX = view.getX() - event.getRawX();
-                dY = view.getY() - event.getRawY();
-                lastAction = MotionEvent.ACTION_DOWN;
-                break;
-
-            case MotionEvent.ACTION_MOVE:
-                view.setY(event.getRawY() + dY);
-                view.setX(event.getRawX() + dX);
-                lastAction = MotionEvent.ACTION_MOVE;
-                break;
-
-            case MotionEvent.ACTION_UP:
-                if (lastAction == MotionEvent.ACTION_DOWN)
-                    Toast.makeText(this, "Clicked!", Toast.LENGTH_SHORT).show();
-                break;
-
-            default:
-                return false;
-        }
-        return true;
-    }
 }
