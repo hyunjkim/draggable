@@ -1,6 +1,5 @@
 <android.support.design.widget.CoordinatorLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/activity_jwplayerview"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -12,13 +11,22 @@
         android:background="@color/gray"
         android:orientation="vertical">
 
-        <com.longtailvideo.jwplayer.JWPlayerView
-            android:id="@+id/jwplayer"
+        <FrameLayout
+            android:id="@+id/draggable"
             android:layout_width="match_parent"
             android:layout_height="0dp"
-            android:layout_weight="1" />
+            android:layout_weight="1">
+            <com.longtailvideo.jwplayer.JWPlayerView
+                android:id="@+id/jwplayer"
+                android:layout_width="match_parent"
+                android:layout_height="0dp">
+                <!--android:layout_weight="1">-->
+            </com.longtailvideo.jwplayer.JWPlayerView>
+        </FrameLayout>
 
-        <RelativeLayout
+        <ScrollView
+            android:id="@+id/scroll"
+            android:scrollbars="vertical"
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="1">
@@ -27,12 +35,12 @@
                 android:id="@+id/output"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:paddingStart="16dp"
                 android:paddingEnd="16dp"
                 android:paddingLeft="16dp"
+                android:paddingStart="16dp"
                 android:paddingTop="16dp"
                 android:textColor="@color/white" />
 
-        </RelativeLayout>
+        </ScrollView>
     </LinearLayout>
 </android.support.design.widget.CoordinatorLayout>
