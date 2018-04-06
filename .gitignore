@@ -7,3 +7,4 @@
 /jwplayer-android-sdk-*
 *.iml
 .idea
+/app/src/main/AndroidManifest.xml
